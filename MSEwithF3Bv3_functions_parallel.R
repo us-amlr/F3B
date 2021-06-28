@@ -51,7 +51,7 @@ MC.MSEwithF3B.par <- function(nsims=3,MC.rates,MC.imports,MC.resets,MC.fishing,
       )
       parallel::clusterEvalQ(cl, {
         library(deSolve)
-        source("MSEwithF3Bv3_functions.R")
+        source("../F3B/MSEwithF3Bv3_functions.R", echo = FALSE)
       })
       
       # Set parallel seed and use parLapply (not parLapplyLB) for reproducibility
@@ -68,7 +68,8 @@ MC.MSEwithF3B.par <- function(nsims=3,MC.rates,MC.imports,MC.resets,MC.fishing,
   
   # for(i in 1:nsims){
   #   if(!suppress){cat("Running Sim",i,"of",nsims,fill=TRUE)}
-  #   outarray[,,i]<-MSEwithF3B(rates=MC.rates,imports=MC.imports,resets=MC.resets,fishing=MC.fishing)
+  #   outarray[,,i]<-MSEwithF3B(rates=MC.rates,imports=MC.imports,resets=MC.resets,
+  #                             fishing=MC.fishing)
   # }
   # outarray
   
