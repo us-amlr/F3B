@@ -1,0 +1,25 @@
+Package: F3B
+Title: Model for Krill Fishery Management Strategy Evaluation
+Version: 0.0.0.9000
+Authors@R: 
+    c(person("George", "Watters", 
+              email = "george.watters@noaa.gov", 
+              role = c("aut", "cre")),
+      person("Sam", "Woodman", 
+              email = "sam.woodman@noaa.gov", 
+              role = c("aut"), 
+              comment = c(ORCID = "0000-0001-6071-8186")))
+Description: A model for CCAMLR to evaluate candidate replacements 
+    for the krill fishery management strategy.
+    See (todo: add reference)
+Depends: R (>= 3.5.0)
+Imports: 
+    abind, 
+    deSolve
+Suggests:
+    parallel
+License: CC0
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1

@@ -1,0 +1,25 @@
+#' @title Setup Clusters
+#' @description Setup parallel clusters for different operating systems.
+#' From swfscMisc: \url{https://github.com/EricArcher/swfscMisc/blob/master/R/setupClusters.R}
+#'
+#' @param num.cores number of cores for multithreading.
+#'   If \code{NULL}, the number used is set to the
+#'   value of \code{parallel::detectCores() - 1}.
+#' @param max.cores maximum number of cores to use.
+#'
+#' @return an object of class \code{c("SOCKcluster", "cluster")}.
+#'
+#' @author Eric Archer \email{eric.archer@@noaa.gov}
+#'
+#' @export
+setupClusters <- function (num.cores = 1, max.cores = NULL) {
+  if (is.null(num.cores)) num.cores <- parallel::detectCores() - 1
+  if (is.null(max.cores)) max.cores <- parallel::detectCores() - 1
+  if (is.na(max.cores)) max.cores <- 1
+  if (max.cores < 1) max.cores <- 1
+  num.cores <- min(num.cores, max.cores)
+
+  cl.func <- ifelse(.Platform$OS.type == "windows",
+                    parallel::makePSOCKcluster, parallel::makeForkCluster)
+  if (num.cores > 1) cl.func(num.cores) else NULL
+}
