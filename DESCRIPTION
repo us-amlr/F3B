@@ -10,14 +10,16 @@ Authors@R:
               role = c("aut"), 
               comment = c(ORCID = "0000-0001-6071-8186")))
 Description: A model for CCAMLR to evaluate candidate replacements 
-    for the krill fishery management strategy.
-    See (todo: add reference)
+    for the krill fishery management strategy. See reference todo.
 Depends: R (>= 3.5.0)
 Imports: 
     abind, 
     deSolve
 Suggests:
-    parallel
+    parallel, 
+    raster, 
+    rgdal, 
+    rgeos
 License: CC0
 Encoding: UTF-8
 LazyData: true

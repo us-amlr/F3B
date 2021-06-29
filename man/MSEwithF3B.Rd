@@ -2,9 +2,21 @@
 % Please edit documentation in R/main.R
 \name{MSEwithF3B}
 \alias{MSEwithF3B}
+\alias{MC.MSEwithF3B}
 \title{Main function for running F3B}
 \usage{
 MSEwithF3B(rates, imports, resets, fishing)
+
+MC.MSEwithF3B(
+  nsims = 3,
+  rates,
+  imports,
+  resets,
+  fishing,
+  suppress = FALSE,
+  num.cores = NULL,
+  seed = NULL
+)
 }
 \arguments{
 \item{rates}{todo}
@@ -14,7 +26,52 @@ MSEwithF3B(rates, imports, resets, fishing)
 \item{resets}{todo}
 
 \item{fishing}{todo}
+
+\item{nsims}{number of Monte Carlo simulations to run. The default is 3}
+
+\item{suppress}{logical; if not running in parallel,
+should the function print which simulation it is currently running.
+Default is FALSE. Ignored if \code{num.cores} is not 1}
+
+\item{num.cores}{Number of CPUs to over which to distribute computations.
+Defaults to \code{NULL}, which uses one fewer than the number of cores
+reported by \code{\link[parallel]{detectCores}}}
+
+\item{seed}{numeric; if not NULL, then either passed to \code{seed} of
+\code{\link[base:Random]{set.seed}} or to \code{iseed} argument of
+\code{\link[parallel]{clusterSetRNGStream}},
+depending on \code{num.cores}. See Details for more information.}
+}
+\value{
+\code{MSEwithF3B} returns a two-dimensional array
+
+\code{Mc.MSEwithF3B} returns a three-dimensional array;
+the third dimension is the MC simulation runs
 }
 \description{
-Piece everything together into the main function
+Run F3B model, once or in Monte Carlo wrapper
+}
+\details{
+todo
+
+See \url{https://pat-s.me/post/reproducibility-when-going-parallel/#reproducible-1}
+for more about the reproducibility method used when running MC simulations in parallel.
+Note that you will get different outputs when using the same \code{seed} value
+when running the MC simulations in parallel vs not,
+i.e., when \code{num.cores} is 1 vs otherwise.
+}
+\examples{
+MC.MSEwithF3B(
+  nsims = 3,
+  rates = c(b=-0.06/12, c=0.27/12, d=0.27/12, e=-0.06/12, f=0.27/12,
+               g=0.27/12, h=-0.12/12, i=0.48/12),
+  imports = c(amult = 0.09004751, kmult = 0.01793353, rmult = 1.340394),
+  resets = c(initXYZmean=19158, initXYZcv=0.11, prosd=0.7,
+                pXinXYZmean=0.64, pXinXYZcv=0.11, pYinYZmean=0.63, pYinYZcv=0.15),
+  fishing = c(nsurveys=10, yrstillnextsurvey=3, surveytime=4, surveycv=1e-10,
+                 startfishingtime=7, stopfishingtime=11, GYMgamma=0,
+                 alphaX=0.741, alphaY=0.174, alphaZ=0.085),
+  num.cores = 1, seed = 1234
+)
+
 }

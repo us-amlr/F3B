@@ -14,13 +14,13 @@
 GetCVp <- function(XYZ.mean=19158000,XYZ.CV=0.11,YZ.mean=6853000,YZ.CV=0.16){
   sigma.logXYZ <- sqrt(log((XYZ.CV^2)+1))
   mu.logXYZ <- log(XYZ.mean)-((sigma.logXYZ^2)/2)
-  XYZ<-rlnorm(10000,meanlog=mu.logXYZ,sdlog=sigma.logXYZ)
+  XYZ <- stats::rlnorm(10000,meanlog=mu.logXYZ,sdlog=sigma.logXYZ)
 
   sigma.logYZ <- sqrt(log((YZ.CV^2)+1))
   mu.logYZ <- log(YZ.mean)-((sigma.logYZ^2)/2)
-  YZ<-rlnorm(10000,meanlog=mu.logYZ,sdlog=sigma.logYZ)
+  YZ <- stats::rlnorm(10000,meanlog=mu.logYZ,sdlog=sigma.logYZ)
 
-  p<-(XYZ-YZ)/XYZ
+  p <-(XYZ-YZ)/XYZ
   cat("CVp =", sqrt(var(p))/mean(p))
 }
 
@@ -102,7 +102,7 @@ TuneF3B <- function(rates,resets,fishing){
   # first set upt the parameter vectors
   Imports <- c(amult=exp(steady$par[1]), kmult=exp(steady$par[1])*(exp(steady$par[2])/(1+exp(steady$par[2]))), rmult=exp(steady$par[3]))
   outmat <- MSEwithF3B(rates=Rates,imports=Imports,resets=Resets,fishing=Fishing)
-  plot.ss(outmat,pick.me=c("Y","Z","survey"))
+  plot_ss(outmat,pick.me=c("Y","Z","survey"))
 
   list(c(steady,Imports))
 

@@ -9,7 +9,7 @@
 #' Plot the weekly biomass time series, along with survey estimates and effective harvest rates
 #'
 #' @export
-plot.ss<-function(indata, pick.me=c("Y","Z","survey")){
+plot_ss<-function(indata, pick.me=c("Y","Z","survey")){
 
   # set up the y-axes etc.
   axis.id<-NA

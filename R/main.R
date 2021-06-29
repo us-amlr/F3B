@@ -17,7 +17,8 @@
 #' @returns A list of ...
 #'
 #' @export
-F3B <- function(t,state,parameters,survey,surveytime,catfuncX,catfuncY,catfuncZ){
+F3B <- function(t, state, parameters, survey, surveytime,
+                catfuncX, catfuncY, catfuncZ){
   with(as.list(c(state,parameters)),{
 
     # get the interpolated catches
@@ -55,7 +56,8 @@ F3B <- function(t,state,parameters,survey,surveytime,catfuncX,catfuncY,catfuncZ)
 #' @inheritParams F3B
 #'
 #' @export
-PositiveF3B <- function(t,state,parameters,survey,surveytime,catfuncX,catfuncY,catfuncZ){
+PositiveF3B <- function(t, state, parameters, survey, surveytime,
+                        catfuncX, catfuncY, catfuncZ){
   with(as.list(state),{
     if(X < 0){X <- 0}
     if(Y < 0){Y <- 0}
@@ -75,18 +77,34 @@ PositiveF3B <- function(t,state,parameters,survey,surveytime,catfuncX,catfuncY,c
 
 #' Main function for running F3B
 #'
-#' Piece everything together into the main function
+#' Run F3B model, once or in Monte Carlo wrapper
 #'
 #' @param rates todo
 #' @param imports todo
 #' @param resets todo
 #' @param fishing todo
 #'
+#' @details
+#' todo
+#'
+#' See \url{https://pat-s.me/post/reproducibility-when-going-parallel/#reproducible-1}
+#' for more about the reproducibility method used when running MC simulations in parallel.
+#' Note that you will get different outputs when using the same \code{seed} value
+#' when running the MC simulations in parallel vs not,
+#' i.e., when \code{num.cores} is 1 vs otherwise.
+#'
+#' @return
+#' \code{MSEwithF3B} returns a two-dimensional array
+#'
+#' \code{Mc.MSEwithF3B} returns a three-dimensional array;
+#' the third dimension is the MC simulation runs
+#'
 #' @export
 MSEwithF3B <- function(rates,imports,resets,fishing){
 
   # set the time sequence within years
-  F3Btime <- seq(from=1,to=12.75,by=0.25)     # nominal 4 weeks per month with time 1 = Oct 1; time 4 = January 1; time 7 = April 1; time 10 = July 1
+  # nominal 4 weeks per month with time 1 = Oct 1; time 4 = January 1; time 7 = April 1; time 10 = July 1
+  F3Btime <- seq(from=1,to=12.75,by=0.25)
 
   with(as.list(c(rates,imports,resets,fishing)),{
 
@@ -166,7 +184,11 @@ MSEwithF3B <- function(rates,imports,resets,fishing){
           catchX <- approxfun(x=tt,y=rep(0,length(tt)),method="constant",rule=2)
           catchY <- approxfun(x=tt,y=rep(0,length(tt)),method="constant",rule=2)
           catchZ <- approxfun(x=tt,y=rep(0,length(tt)),method="constant",rule=2)
-          ttt <- ode(y=F3Bstate,times=tt,func=F3B,parms=F3Bparameters,method="ode45",events=list(func=PositiveF3B,time=tt),rtol=1e-12,atol=0,survey=NA,surveytime=surveytime,catfuncX=catchX,catfuncY=catchY,catfuncZ=catchZ)
+          ttt <- deSolve::ode(
+            y=F3Bstate, times=tt, func=F3B, parms=F3Bparameters, method="ode45",
+            events=list(func=PositiveF3B, time=tt), rtol=1e-12, atol=0,
+            survey=NA, surveytime=surveytime,
+            catfuncX=catchX, catfuncY=catchY, catfuncZ=catchZ)
           surveyYZmean <- sum(ttt[dim(ttt)[1],3:4])
 
           # survey estimate of biomass contaminated by observation error
@@ -202,9 +224,17 @@ MSEwithF3B <- function(rates,imports,resets,fishing){
 
 
         if(i==1 & j==1){
-          outmat <- ode(y=F3Bstate,times=F3Btime,func=F3B,parms=F3Bparameters,method="ode45",events=list(func=PositiveF3B,time=F3Btime),rtol=1e-12,atol=0,survey=surveyYZ,surveytime=surveytime,catfuncX=catchX,catfuncY=catchY,catfuncZ=catchZ)
+          outmat <- deSolve::ode(
+            y=F3Bstate, times=F3Btime, func=F3B, parms=F3Bparameters, method="ode45",
+            events=list(func=PositiveF3B, time=F3Btime), rtol=1e-12, atol=0,
+            survey=surveyYZ, surveytime=surveytime,
+            catfuncX=catchX, catfuncY=catchY, catfuncZ=catchZ)
         } else {
-          tt <- ode(y=F3Bstate,times=F3Btime,func=F3B,parms=F3Bparameters,method="ode45",events=list(func=PositiveF3B,time=F3Btime),rtol=1e-12,atol=0,survey=surveyYZ,surveytime=surveytime,catfuncX=catchX,catfuncY=catchY,catfuncZ=catchZ)
+          tt <- deSolve::ode(
+            y=F3Bstate,times=F3Btime, func=F3B,parms=F3Bparameters, method="ode45",
+            events=list(func=PositiveF3B, time=F3Btime), rtol=1e-12, atol=0,
+            survey=surveyYZ, surveytime=surveytime,
+            catfuncX=catchX, catfuncY=catchY, catfuncZ=catchZ)
           # make the time stamp cumulative since time 1
           tt[,1] <- seq(from=outmat[dim(outmat)[1]-1,1]+0.25,length.out=48,by=0.25)
           outmat <- rbind(outmat,tt)
@@ -232,4 +262,89 @@ MSEwithF3B <- function(rates,imports,resets,fishing){
     return(outmat)
 
   })
+}
+
+
+#' @rdname MSEwithF3B
+#'
+#' @param nsims number of Monte Carlo simulations to run. The default is 3
+#' @param suppress logical; if not running in parallel,
+#'   should the function print which simulation it is currently running.
+#'   Default is FALSE. Ignored if \code{num.cores} is not 1
+#' @param num.cores Number of CPUs to over which to distribute computations.
+#'   Defaults to \code{NULL}, which uses one fewer than the number of cores
+#'   reported by \code{\link[parallel]{detectCores}}
+#' @param seed numeric; if not NULL, then either passed to \code{seed} of
+#'    \code{\link[base:Random]{set.seed}} or to \code{iseed} argument of
+#'    \code{\link[parallel]{clusterSetRNGStream}},
+#'    depending on \code{num.cores}. See Details for more information.
+#'
+#' @examples
+#' MC.MSEwithF3B(
+#'   nsims = 3,
+#'   rates = c(b=-0.06/12, c=0.27/12, d=0.27/12, e=-0.06/12, f=0.27/12,
+#'                g=0.27/12, h=-0.12/12, i=0.48/12),
+#'   imports = c(amult = 0.09004751, kmult = 0.01793353, rmult = 1.340394),
+#'   resets = c(initXYZmean=19158, initXYZcv=0.11, prosd=0.7,
+#'                 pXinXYZmean=0.64, pXinXYZcv=0.11, pYinYZmean=0.63, pYinYZcv=0.15),
+#'   fishing = c(nsurveys=10, yrstillnextsurvey=3, surveytime=4, surveycv=1e-10,
+#'                  startfishingtime=7, stopfishingtime=11, GYMgamma=0,
+#'                  alphaX=0.741, alphaY=0.174, alphaZ=0.085),
+#'   num.cores = 1, seed = 1234
+#' )
+#'
+#' @export
+MC.MSEwithF3B <- function(nsims=3, rates, imports, resets, fishing,
+                              suppress=FALSE, num.cores=NULL, seed=NULL) {
+
+  # # set up dimensions of output array
+  # outarray <- array(data=NA,dim=c(49*MC.fishing[1]*MC.fishing[2],14,nsims))
+
+  # stopifnot(require(abind), require(deSolve), require(parallel))
+
+  cl <- setupClusters(num.cores)
+  outarray.list <- tryCatch({
+    if (is.null(cl)) { # Don't parallelize if num.cores == 1
+      if (!is.null(seed)) {
+        on.exit(set.seed(NULL))
+        set.seed(seed)
+      }
+      lapply(1:nsims, function(i) {
+        if(!suppress) cat("Running Sim",i,"of",nsims,fill=TRUE)
+        MSEwithF3B(rates=rates, imports=imports, resets=resets, fishing=fishing)
+      })
+
+    } else { # Run lapply using parLapply
+      parallel::clusterExport(
+        cl = cl, varlist = c("rates", "imports", "resets", "fishing"),
+        envir = environment()
+      )
+      parallel::clusterEvalQ(cl, {
+        library(deSolve)
+      })
+
+      # Set parallel seed and use parLapply (not parLapplyLB) for reproducibility
+      # See: https://pat-s.me/post/reproducibility-when-going-parallel/
+      #https://s3.amazonaws.com/assets.datacamp.com/production/course_6245/slides/chapter4.pdf
+      if (!is.null(seed)) parallel::clusterSetRNGStream(cl = cl, seed)
+      # parallel::parLapply(
+      #   cl, 1:nsims, MSEwithF3B.wrap,
+      #   rates=rates, imports=imports, resets=resets, fishing=fishing
+      # )
+      parallel::parLapply(
+        cl, 1:nsims, function(i, ...) {MSEwithF3B(...)},
+        rates=rates, imports=imports, resets=resets, fishing=fishing
+      )
+    }
+  }, finally = if(!is.null(cl)) parallel::stopCluster(cl) else NULL)
+
+
+  # for(i in 1:nsims){
+  #   if(!suppress){cat("Running Sim",i,"of",nsims,fill=TRUE)}
+  #   outarray[,,i]<-MSEwithF3B(rates=MC.rates,imports=MC.imports,resets=MC.resets,
+  #                             fishing=MC.fishing)
+  # }
+  # outarray
+
+  abind::abind(outarray.list, along = 3)
 }

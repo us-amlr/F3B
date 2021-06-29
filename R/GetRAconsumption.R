@@ -15,10 +15,16 @@ GetRAconsumption <- function(){
   # Also, I'm not clear if the results are consistent with Vicky's paper
   # I will use them for now, but probably need to revisit this
 
-  library(raster)
-  library(rgdal)
-  # GW - this also seems to be needed
-  library(rgeos)
+  # library(raster)
+  # library(rgdal)
+  # # GW - this also seems to be needed
+  # library(rgeos)
+
+  stopifnot(
+    requireNamespace("raster"),
+    requireNamespace("rgdal"),
+    requireNamespace("rgeos")
+  )
 
   #make a shapefile of the study area: the operational footprint for the krill fishery within CCAMLR Subarea 48.1 over the last 5 years
 
